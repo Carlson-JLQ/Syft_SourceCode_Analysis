@@ -17,10 +17,12 @@ import (
 
 const ID = spdxutil.JSONFormatID
 
+// 返回该编码器支持的 SPDX JSON 文档版本列表 (字符串数组)。
 func SupportedVersions() []string {
 	return spdxutil.SupportedVersions(ID)
 }
 
+// 用于配置 SPDX JSON 编码器，包含版本 (Version) 和格式化 (Pretty) 选项。
 type EncoderConfig struct {
 	Version string
 	Pretty  bool // don't include spaces and newlines; same as jq -c
@@ -30,6 +32,7 @@ type encoder struct {
 	cfg EncoderConfig
 }
 
+// 根据给定的配置 (EncoderConfig) 创建一个新的 SPDX JSON 编码器实例。
 func NewFormatEncoderWithConfig(cfg EncoderConfig) (sbom.FormatEncoder, error) {
 	return encoder{
 		cfg: cfg,
@@ -43,18 +46,25 @@ func DefaultEncoderConfig() EncoderConfig {
 	}
 }
 
+// 返回编码器的格式标识符 (sbom.FormatID)，为 spdxutil.JSONFormatID。
 func (e encoder) ID() sbom.FormatID {
 	return ID
 }
 
+// 返回编码器的别名列表 (空列表)。
 func (e encoder) Aliases() []string {
 	return []string{}
 }
 
+// 返回编码器配置的版本信息。
 func (e encoder) Version() string {
 	return e.cfg.Version
 }
 
+// 将 SBOM 数据 (s) 编码成 SPDX JSON 格式并写入指定的输出流 (writer)。
+// 首先将 SBOM 数据转换为内部使用的 SPDX 文档模型 (latestDoc)。
+// 然后根据编码器配置的版本 (Version)，使用相应的 spdx/tools-golang/spdx/v2/vX.X 库将内部文档模型转换为特定的 SPDX JSON 文档格式 (encodeDoc)。
+// 最后，使用 encoding/json 库将编码后的 SPDX JSON 文档写入输出流。
 func (e encoder) Encode(writer io.Writer, s sbom.SBOM) error {
 	latestDoc := spdxhelpers.ToFormatModel(s)
 	if latestDoc == nil {
